@@ -1,0 +1,139 @@
+-- Core tables for Servicer Investor Reporting (SIR) System
+
+-- Pool Definition table
+CREATE GLOBAL TEMPORARY TABLE pool_definition (
+    pool_id VARCHAR2(12) PRIMARY KEY,
+    pool_type VARCHAR2(10) NOT NULL,
+    issue_date DATE NOT NULL,
+    original_amount NUMBER(15,2) NOT NULL,
+    current_amount NUMBER(15,2) NOT NULL,
+    pool_factor DECIMAL(8,8) NOT NULL,
+    weighted_rate DECIMAL(6,4) NOT NULL,
+    security_rate DECIMAL(6,4) NOT NULL,
+    maturity_date DATE NOT NULL,
+    status VARCHAR2(20) DEFAULT 'ACTIVE',
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    modified_by VARCHAR2(30),
+    modified_date DATE,
+    CONSTRAINT chk_pool_status CHECK (status IN ('ACTIVE', 'INACTIVE', 'TERMINATED'))
+);
+
+-- Loan Master table
+CREATE GLOBAL TEMPORARY TABLE loan_master (
+    loan_id VARCHAR2(12) PRIMARY KEY,
+    origination_date DATE NOT NULL,
+    original_amount NUMBER(15,2) NOT NULL,
+    current_balance NUMBER(15,2) NOT NULL,
+    interest_rate DECIMAL(6,4) NOT NULL,
+    maturity_date DATE NOT NULL,
+    next_payment_date DATE NOT NULL,
+    last_payment_date DATE,
+    status VARCHAR2(20) DEFAULT 'CURRENT',
+    delinquency_days NUMBER(3) DEFAULT 0,
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    modified_by VARCHAR2(30),
+    modified_date DATE,
+    CONSTRAINT chk_loan_status CHECK (status IN ('CURRENT', 'DELINQUENT', 'DEFAULT', 'FORECLOSURE', 'REO', 'LIQUIDATED'))
+);
+
+-- Pool-Loan Cross Reference table
+CREATE GLOBAL TEMPORARY TABLE pool_loan_xref (
+    pool_id VARCHAR2(12),
+    loan_id VARCHAR2(12),
+    participation_rate DECIMAL(6,4) DEFAULT 100.0,
+    active_flag CHAR(1) DEFAULT 'Y',
+    effective_date DATE NOT NULL,
+    termination_date DATE,
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    modified_by VARCHAR2(30),
+    modified_date DATE,
+    CONSTRAINT pk_pool_loan PRIMARY KEY (pool_id, loan_id),
+    CONSTRAINT fk_xref_pool FOREIGN KEY (pool_id) REFERENCES pool_definition(pool_id),
+    CONSTRAINT fk_xref_loan FOREIGN KEY (loan_id) REFERENCES loan_master(loan_id),
+    CONSTRAINT chk_active_flag CHECK (active_flag IN ('Y', 'N'))
+);
+
+-- Monthly Remittance table
+CREATE GLOBAL TEMPORARY TABLE monthly_remittance (
+    remittance_id NUMBER PRIMARY KEY,
+    pool_id VARCHAR2(12) NOT NULL,
+    reporting_period DATE NOT NULL,
+    due_date DATE NOT NULL,
+    submission_date DATE,
+    total_scheduled_principal NUMBER(15,2) NOT NULL,
+    total_unscheduled_principal NUMBER(15,2) NOT NULL,
+    total_interest NUMBER(15,2) NOT NULL,
+    pool_factor_reported DECIMAL(8,8),
+    status VARCHAR2(20) DEFAULT 'PENDING',
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    modified_by VARCHAR2(30),
+    modified_date DATE,
+    CONSTRAINT fk_remit_pool FOREIGN KEY (pool_id) REFERENCES pool_definition(pool_id),
+    CONSTRAINT chk_remit_status CHECK (status IN ('PENDING', 'SUBMITTED', 'ACCEPTED', 'REJECTED'))
+);
+
+-- Loan Payment History table
+CREATE TABLE loan_payment_history (
+    payment_id NUMBER PRIMARY KEY,
+    loan_id VARCHAR2(12) NOT NULL,
+    remittance_id NUMBER NOT NULL,
+    payment_date DATE NOT NULL,
+    scheduled_principal NUMBER(15,2) NOT NULL,
+    scheduled_interest NUMBER(15,2) NOT NULL,
+    unscheduled_principal NUMBER(15,2) DEFAULT 0,
+    other_fees NUMBER(15,2) DEFAULT 0,
+    beginning_balance NUMBER(15,2) NOT NULL,
+    ending_balance NUMBER(15,2) NOT NULL,
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    CONSTRAINT fk_payment_loan FOREIGN KEY (loan_id) REFERENCES loan_master(loan_id),
+    CONSTRAINT fk_payment_remit FOREIGN KEY (remittance_id) REFERENCES monthly_remittance(remittance_id)
+);
+
+-- Exception Log table
+CREATE TABLE exception_log (
+    exception_id NUMBER PRIMARY KEY,
+    pool_id VARCHAR2(12),
+    loan_id VARCHAR2(12),
+    exception_type VARCHAR2(50) NOT NULL,
+    severity VARCHAR2(20) NOT NULL,
+    status VARCHAR2(20) DEFAULT 'OPEN',
+    exception_desc VARCHAR2(4000),
+    created_date DATE DEFAULT SYSDATE,
+    resolved_date DATE,
+    resolved_by VARCHAR2(30),
+    resolution_notes VARCHAR2(4000),
+    CONSTRAINT fk_exception_pool FOREIGN KEY (pool_id) REFERENCES pool_definition(pool_id),
+    CONSTRAINT fk_exception_loan FOREIGN KEY (loan_id) REFERENCES loan_master(loan_id),
+    CONSTRAINT chk_exception_severity CHECK (severity IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
+    CONSTRAINT chk_exception_status CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'))
+);
+
+-- Monthly Reports table
+CREATE TABLE monthly_reports (
+    report_id NUMBER PRIMARY KEY,
+    pool_id VARCHAR2(12) NOT NULL,
+    report_date DATE NOT NULL,
+    report_content CLOB NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    created_by VARCHAR2(30) DEFAULT USER,
+    CONSTRAINT fk_report_pool FOREIGN KEY (pool_id) REFERENCES pool_definition(pool_id)
+);
+
+-- Create sequences
+CREATE SEQUENCE seq_report_id START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_remittance_id START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_payment_id START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE seq_exception_id START WITH 1 INCREMENT BY 1;
+
+-- Create indexes
+CREATE INDEX idx_loan_status ON loan_master(status);
+CREATE INDEX idx_pool_status ON pool_definition(status);
+CREATE INDEX idx_remit_period ON monthly_remittance(reporting_period);
+CREATE INDEX idx_payment_date ON loan_payment_history(payment_date);
+CREATE INDEX idx_exception_severity ON exception_log(severity);
+CREATE INDEX idx_report_date ON monthly_reports(report_date); 

@@ -1,0 +1,235 @@
+SECURITIZATION AND INVESTOR REPORTING (SIR) SYSTEM
+==============================================
+
+1. SHELL SCRIPTS
+---------------
+monthly_reporting.sh
+- Purpose: Orchestrates the monthly reporting process for all active pools
+- Key Functions:
+  * Processes remittances for all active pools
+  * Generates monthly investor reports
+  * Creates exception reports for high/critical issues
+  * Generates pool summary reports
+  * Maintains cleanup of old reports (12-month retention)
+- Dependencies:
+  * Oracle database connection
+  * investor_reporting_pkg
+  * Required directories: /var/log/sir, /var/reports/sir
+- Error Handling:
+  * Logs all errors with timestamps
+  * Exits with failure on critical errors
+  * Maintains audit trail of all operations
+
+2. LOAN MODIFICATION COMPONENTS
+-----------------------------
+
+2.1 loan_modification_pkg
+- Purpose: Handles individual loan modification operations
+- Key Components:
+  a) Constants:
+     * DLQ_MOD: Delinquency modification type
+     * BK_MOD: Bankruptcy modification type
+     * DIS_MOD: Disaster relief modification type
+
+  b) Core Procedures:
+     process_loan_modification:
+     * Processes individual loan modifications
+     * Updates loan terms (rate, term, forbearance)
+     * Creates modification history
+     * Triggers pool metric updates
+     * Handles transaction logging
+
+     cancel_modification:
+     * Reverts loan modifications
+     * Creates reversal transactions
+     * Updates modification history
+     * Recalculates loan metrics
+
+     get_active_modifications:
+     * Retrieves active modifications for a loan
+     * Filters out cancelled modifications
+     * Orders by effective date
+
+     update_modification_status:
+     * Updates modification status
+     * Maintains audit trail
+     * Handles status change notifications
+
+2.2 loan_mod_batch_pkg
+- Purpose: Manages batch processing of loan modifications
+- Key Components:
+  a) Constants:
+     * Batch size: 1000 records
+     * Maximum retries: 3 attempts
+
+  b) Core Procedures:
+     process_modification_batch:
+     * Processes modifications in bulk
+     * Uses FORALL for performance
+     * Maintains processing counts
+     * Handles batch-level error logging
+
+     handle_failed_modifications:
+     * Implements retry logic
+     * Processes failed modifications individually
+     * Maintains retry count limits
+     * Logs retry attempts and results
+
+     cleanup_completed_modifications:
+     * Archives old modifications
+     * Maintains system performance
+     * Default retention: 90 days
+     * Handles archival errors
+
+     get_batch_status:
+     * Monitors batch progress
+     * Provides completion statistics
+     * Tracks failed modifications
+     * Returns detailed status information
+
+3. DATABASE OBJECTS
+-----------------
+
+3.1 Tables:
+loan_modification_history:
+- Primary table for modification tracking
+- Stores modification details:
+  * Rates (old/new)
+  * Terms (old/new)
+  * Payment amounts
+  * Forbearance details
+  * Status tracking
+  * Audit fields
+- Constraints:
+  * Valid modification types
+  * Valid status values
+  * Foreign key to loan_master
+
+loan_modification_audit:
+- Purpose: Maintains detailed audit trail
+- Tracks:
+  * All changes to modifications
+  * Who made changes
+  * When changes occurred
+  * Old and new values
+- Used for:
+  * Compliance reporting
+  * Issue investigation
+  * Change tracking
+
+3.2 Indexes:
+- idx_mod_loan_id: Loan-based queries
+- idx_mod_effective_date: Date-based reporting
+- idx_mod_status: Status monitoring
+- idx_mod_audit_loan: Audit trail queries
+- idx_mod_audit_date: Temporal audit analysis
+
+3.3 Triggers:
+trg_loan_mod_audit:
+- Purpose: Automatic audit trail maintenance
+- Captures:
+  * INSERT operations (new modifications)
+  * UPDATE operations (status changes)
+  * DELETE operations (rare/controlled)
+- Maintains:
+  * Change type
+  * Before/after values
+  * Change timestamp
+  * User tracking
+
+4. INTEGRATION POINTS
+-------------------
+
+4.1 With Investor Reporting:
+- Monthly report generation
+- Pool performance updates
+- Exception logging
+- Remittance processing
+
+4.2 With Loan Servicing:
+- Loan detail retrieval
+- Payment processing
+- Metric recalculation
+- Status updates
+
+4.3 With Pool Management:
+- Pool performance reporting
+- Risk metric updates
+- Investor notifications
+- Compliance tracking
+
+5. ERROR HANDLING AND LOGGING
+---------------------------
+- Comprehensive error logging
+- Exception categorization:
+  * HIGH: Immediate attention required
+  * MEDIUM: Review required
+  * LOW: Informational
+- Retry mechanisms for transient failures
+- Transaction management:
+  * Atomic operations
+  * Proper rollback handling
+  * Commit management
+
+6. PERFORMANCE CONSIDERATIONS
+--------------------------
+- Batch processing for efficiency
+- Bulk collect operations
+- FORALL statements for DML
+- Strategic indexing
+- Archival of old data
+- Partitioning considerations
+
+7. SECURITY AND COMPLIANCE
+------------------------
+- Audit trail maintenance
+- User action tracking
+- Status change monitoring
+- Data retention policies
+- Access control integration
+
+8. MONITORING AND MAINTENANCE
+---------------------------
+- Batch status tracking
+- Performance monitoring
+- Error rate tracking
+- Data volume management
+- Archive management
+
+9. REPORTING CAPABILITIES
+-----------------------
+- Monthly investor reports
+- Exception reports
+- Pool performance summaries
+- Modification status reports
+- Audit trail reports
+
+10. BATCH PROCESSING WORKFLOW
+---------------------------
+1. Initial batch creation
+2. Modification processing
+3. Error handling and retries
+4. Status updates and notifications
+5. Report generation
+6. Cleanup and archival
+
+11. DEPENDENCIES AND PREREQUISITES
+-------------------------------
+Required Packages:
+- investor_reporting_pkg
+- loan_processing_pkg
+- loan_servicing_pkg
+- pool_performance_pkg
+
+Required Tables:
+- loan_master
+- pool_definition
+- pool_loan_xref
+- payment_transaction
+- exception_log
+
+Required Sequences:
+- modification_seq
+- transaction_id_seq
+- batch_log_seq
+- mod_audit_seq 

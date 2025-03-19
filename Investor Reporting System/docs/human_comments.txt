@@ -1,0 +1,168 @@
+/* monthly_reporting.sh */
+# Added by John - 2023-04-15
+# This script needs to run on the first of every month
+# Make sure ORACLE_PASSWORD is set in the environment or it will fail!
+# Had to add error handling after prod incident last month
+# TODO: Add email notifications for critical errors
+
+# Modified by Sarah - 2023-08-20
+# Changed report retention to 12 months instead of 6
+# Finance team needs longer history for audits
+# Note: Report directory needs at least 50GB free space
+
+/* investor_reporting_pkg.sql */
+-- Package created by Mike (2023-01-10)
+-- Main package for investor reporting logic
+-- WARNING: Don't modify process_remittance without talking to Treasury team
+-- They have custom spreadsheets that depend on the output format
+-- Known issue: Sometimes duplicates remittance records for leap years
+-- Need to fix this before 2024
+
+/* loan_modification_pkg.sql */
+-- HACK: Had to add special handling for bankruptcy mods
+-- The normal flow doesn't work because of state regulations
+-- TODO: Refactor this mess when we have time
+-- Note to self: Don't touch the forbearance calculation logic
+-- It looks wrong but it's actually handling a edge case for VA loans
+
+/* process_delinquent_loans.sh */
+# Quick fix by Tom (2023-09-15)
+# Added retry logic because sometimes Oracle connection times out
+# Maximum 3 retries should be enough
+# If you see ORA-01555 error, increase undo_retention parameter
+
+/* loan_servicing_pkg.sql */
+-- Major update by Alice (2023-06-01)
+-- Complete rewrite of payment allocation logic
+-- Old version was causing rounding issues
+-- Had to use DECIMAL(12,6) instead of NUMBER for better precision
+-- Don't change the order of payment allocation:
+-- 1. Late fees
+-- 2. Interest
+-- 3. Principal
+-- 4. Escrow
+-- This order is required by regulatory guidelines
+
+/* delinquency_processing_pkg.sql */
+-- FIXME: Current logic doesn't handle partial payments correctly
+-- Need to discuss with business team about requirements
+-- For now, any payment less than 90% of due amount is considered partial
+-- Added debug logging because this keeps breaking in prod
+-- Check exception_log if you see weird delinquency statuses
+
+/* pool_valuation_pkg.sql */
+-- Created by Dave (2023-03-15)
+-- This is black magic - don't touch unless you really understand MBS pricing
+-- Had to copy some logic from the old Perl scripts
+-- Yes, the formula looks weird but it's what the traders want
+-- NOTE: WAC calculation is different for ARM pools!
+
+/* loan_risk_assessment_pkg.sql */
+-- Updated by Sarah (2023-07-20)
+-- Changed risk scoring algorithm per Basel III requirements
+-- Old comments removed because they were misleading
+-- IMPORTANT: Risk factors are now loaded from reference table
+-- Don't hardcode values like we did before!
+-- Known limitation: Can't handle non-standard loan terms
+
+/* cash_flow_pkg.sql */
+-- Author: Mike
+-- Date: 2023-02-10
+-- This package is a mess but it works
+-- TODO: Split this into smaller packages
+-- Be careful with the prepayment calculations
+-- The formula looks wrong but it matches the Excel model
+-- Don't ask me why we divide by 365.25
+-- Added lots of debug logging because this is where things usually break
+
+/* loan_mod_batch_pkg.sql */
+-- Last modified: 2023-10-01
+-- Increased batch size to 1000 after performance testing
+-- Added better error handling
+-- Note: This fails sometimes if run during end-of-day processing
+-- Best to schedule it for off-peak hours
+-- DEBUG: If you see ORA-01555, check undo tablespace
+-- Added by Tom: Don't run multiple instances simultaneously!
+
+/* monthly_reports_pkg.sql */
+-- WARNING: This package has weird dependencies
+-- Must run after end-of-day processing
+-- But before start-of-day
+-- Yes, I know this is stupid
+-- No, we can't change it because downstream systems depend on it
+-- Added retry logic for network timeouts
+-- Check alert log if reports are missing
+
+/* pool_performance_pkg.sql */
+-- Created: 2023-05-15
+-- Author: Alice
+-- This is where all the performance metrics are calculated
+-- Some of these formulas came from the business team
+-- Don't ask me why they want to calculate IRR this way
+-- HACK: Added special case for GNMA pools
+-- TODO: Clean up the temporary tables
+-- They're not really temporary anymore
+
+/* loan_modification_history.sql */
+-- Table created by John (2023-01-05)
+-- Had to add more audit columns after the audit
+-- Yes, we need both created_by and updated_by
+-- And yes, we need both timestamps
+-- Don't remove the indexes - reports depend on them
+-- Added partitioning by date range
+-- Purge job runs every Sunday at midnight
+
+/* batch_processing_log.sql */
+-- Modified by Dave (2023-08-10)
+-- Increased varchar sizes because error messages were getting truncated
+-- Added new status codes:
+-- FAILED_RETRY - When job will be retried
+-- FAILED_FATAL - When job failed and won't be retried
+-- COMPLETED_WITH_ERRORS - Because business wants to know
+-- TODO: Add more error codes
+-- Note: Don't purge logs before 90 days
+
+/* exception_log.sql */
+-- Last touched by Tom
+-- Date: 2023-11-01
+-- This is our lifeline when things go wrong
+-- Added severity levels:
+-- CRITICAL - Wake someone up
+-- HIGH - Look at it today
+-- MEDIUM - Look at it this week
+-- LOW - Whatever
+-- Added new columns for better tracking
+-- Don't forget to check this daily!
+
+/* loan_status_history.sql */
+-- IMPORTANT: This table is used for audit
+-- Keep all records forever
+-- Added triggers for automatic tracking
+-- Business wants to know who changed what
+-- And why it was changed
+-- And when it was changed
+-- And what was the old value
+-- And what is the new value
+-- Yes, this takes a lot of space
+-- No, we can't remove anything
+
+/* remittance_processing.sql */
+-- Created by Mike (2023-04-01)
+-- This is not a joke (even though it was created on April 1st)
+-- Handles all remittance processing
+-- CRITICAL: Must run in this order:
+-- 1. Calculate amounts
+-- 2. Generate remittance files
+-- 3. Update pool factors
+-- 4. Create payment records
+-- If you change this order, accounting will scream
+
+/* data_cleanup_jobs.sql */
+-- Added by Sarah
+-- These jobs clean up old data
+-- Run every weekend
+-- Check free space before running!
+-- Don't change retention periods without approval
+-- Added email notifications
+-- Because no one checks the logs
+-- And then complains that jobs failed 
