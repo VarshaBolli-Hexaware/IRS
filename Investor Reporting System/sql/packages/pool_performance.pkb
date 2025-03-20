@@ -80,12 +80,12 @@ CREATE OR REPLACE PACKAGE BODY pool_performance_pkg AS
         JOIN pool_loan_xref x ON l.loan_id = x.loan_id
         WHERE x.pool_id = p_pool_id;
         
-        -- Calculate loss severity
-        v_metrics.loss_severity := 
-            NVL(SUM(CASE WHEN status = 'DEFAULT' 
+        -- Calculate loss severity        
+            select NVL(SUM(CASE WHEN status = 'DEFAULT' 
                         THEN (original_balance - current_balance) / original_balance 
                         ELSE 0 END) / 
                 NULLIF(COUNT(CASE WHEN status = 'DEFAULT' THEN 1 END), 0), 0) * 100
+        INTO v_metrics.loss_severity
         FROM loan_master l
         JOIN pool_loan_xref x ON l.loan_id = x.loan_id
         WHERE x.pool_id = p_pool_id;
