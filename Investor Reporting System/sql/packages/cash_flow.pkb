@@ -1,25 +1,3 @@
-CREATE OR REPLACE PACKAGE cash_flow_pkg AS
-  
-    -- Core procedures and functions
-    FUNCTION project_cash_flows(
-        p_pool_id IN VARCHAR2,
-        p_projection_months IN NUMBER DEFAULT 360
-    ) RETURN t_cash_flow_table PIPELINED;
-    
-    FUNCTION calculate_pool_duration(
-        p_pool_id IN VARCHAR2,
-        p_yield_rate IN NUMBER
-    ) RETURN NUMBER;
-    
-    FUNCTION calculate_pool_convexity(
-        p_pool_id IN VARCHAR2,
-        p_yield_rate IN NUMBER,
-        p_duration IN NUMBER
-    ) RETURN NUMBER;
-    
-END cash_flow_pkg;
-/
-
 CREATE OR REPLACE PACKAGE BODY cash_flow_pkg AS
     FUNCTION calculate_period_cash_flow(
         p_pool_id IN VARCHAR2,
