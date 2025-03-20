@@ -7,9 +7,9 @@ CREATE OR REPLACE PACKAGE BODY pricing_notification_pkg AS
     ) IS
     BEGIN
         -- Log the input parameters (for debugging or audit purposes)
-        DBMS_OUTPUT.PUT_LINE('Pool ID: ' p_pool_id);
-        DBMS_OUTPUT.PUT_LINE('Market Value: ' p_market_value);
-        DBMS_OUTPUT.PUT_LINE('Yield Rate: ' p_yield_rate);
+        DBMS_OUTPUT.PUT_LINE('Pool ID: ' || p_pool_id);
+        DBMS_OUTPUT.PUT_LINE('Market Value: ' || p_market_value);
+        DBMS_OUTPUT.PUT_LINE('Yield Rate: ' || p_yield_rate);
 
         -- Example logic: Insert the values into a notification table
         INSERT INTO price_update_notifications (
@@ -33,7 +33,7 @@ CREATE OR REPLACE PACKAGE BODY pricing_notification_pkg AS
     EXCEPTION
         WHEN OTHERS THEN
             -- Handle any exceptions that occur during execution
-            DBMS_OUTPUT.PUT_LINE('An error occurred: ' SQLERRM);
+            DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
             ROLLBACK; -- Rollback the transaction in case of an error
     END send_price_update;
 
