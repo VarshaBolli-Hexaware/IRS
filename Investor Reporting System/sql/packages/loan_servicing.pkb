@@ -14,7 +14,7 @@ CREATE OR REPLACE PACKAGE BODY loan_servicing_pkg AS
                 p_loan_id, 
                 'LOAN_DETAILS', 
                 'HIGH', 
-                'Error retrieving loan details: ' SQLERRM 
+                'Error retrieving loan details: ' || SQLERRM 
             ); 
             RAISE; 
     END get_loan_details;
@@ -109,7 +109,7 @@ CREATE OR REPLACE PACKAGE BODY loan_servicing_pkg AS
                     p_loan_id, 
                     'STATUS_CHANGE', 
                     'HIGH', 
-                    'High risk loan status changed to ' p_new_status 
+                    'High risk loan status changed to ' || p_new_status 
                 ); 
             END IF; 
              
@@ -132,7 +132,7 @@ CREATE OR REPLACE PACKAGE BODY loan_servicing_pkg AS
                 p_loan_id, 
                 'STATUS_UPDATE', 
                 'HIGH', 
-                'Error updating loan status: ' SQLERRM 
+                'Error updating loan status: ' || SQLERRM 
             ); 
             RAISE; 
     END update_loan_status;
