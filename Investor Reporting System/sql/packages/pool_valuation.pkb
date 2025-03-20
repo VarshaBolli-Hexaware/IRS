@@ -63,7 +63,7 @@ CREATE OR REPLACE PACKAGE BODY pool_valuation_pkg AS
                 NULL, 
                 'POOL_METRICS_CALCULATION', 
                 'HIGH', 
-                'Error calculating pool metrics: ' SQLERRM 
+                'Error calculating pool metrics: ' || SQLERRM 
             ); 
             RAISE; 
     END calculate_pool_metrics; 
@@ -120,7 +120,7 @@ CREATE OR REPLACE PACKAGE BODY pool_valuation_pkg AS
                 NULL, 
                 'POOL_PRICING_UPDATE', 
                 'HIGH', 
-                'Error updating pool pricing: ' SQLERRM 
+                'Error updating pool pricing: ' || SQLERRM 
             ); 
             RAISE; 
     END update_pool_pricing; 
@@ -148,7 +148,7 @@ CREATE OR REPLACE PACKAGE BODY pool_valuation_pkg AS
                 NULL, 
                 'POOL_VALUATION', 
                 'HIGH', 
-                'Error recalculating pool value: ' SQLERRM 
+                'Error recalculating pool value: ' || SQLERRM 
             ); 
             RAISE; 
     END recalculate_pool_value; 
