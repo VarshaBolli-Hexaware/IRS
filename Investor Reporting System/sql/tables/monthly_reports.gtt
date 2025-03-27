@@ -1,0 +1,20 @@
+CREATE GLOBAL TEMPORARY TABLE monthly_reports 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- this table provide monthly reports details of specific pool 
+	(
+    report_id NUMBER PRIMARY KEY,
+    pool_id VARCHAR2(20) NOT NULL,
+    report_date DATE NOT NULL,
+    report_content CLOB NOT NULL,
+    created_date DATE DEFAULT SYSDATE,
+    created_by VARCHAR2(30) DEFAULT USER
+    )on commit delete rows;
+	
+	comment on table monthly_reports
+	is ' provides mothly report for the specific pool. ';
+		
+
