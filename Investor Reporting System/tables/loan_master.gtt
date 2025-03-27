@@ -1,0 +1,38 @@
+CREATE GLOBAL TEMPORARY TABLE loan_master 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- without the prior written consent of.	
+	-- loan_master table Retrieve Next Payment Date for Specific Loan
+	-- Update Loan Status and Delinquency Information
+	(
+    loan_id             VARCHAR2(20) PRIMARY KEY,
+    fannie_loan_number  VARCHAR2(12) UNIQUE,
+    origination_date    DATE,
+    original_amount     NUMBER(12,2),
+    current_balance     NUMBER(12,2),
+    interest_rate       NUMBER(5,4),
+    loan_term_months    NUMBER(3),
+    remaining_term      NUMBER(3),
+    next_payment_date   DATE,
+    last_payment_date   DATE,
+    modification_flag   CHAR(1),
+    created_date       DATE DEFAULT SYSDATE,
+    modified_date      DATE DEFAULT SYSDATE,
+    maturity_date DATE NOT NULL,
+    next_payment_date DATE NOT NULL,
+    status VARCHAR2(20) DEFAULT 'CURRENT',
+    delinquency_days NUMBER(3) DEFAULT 0,
+    created_by VARCHAR2(30) NOT NULL,
+    modified_by VARCHAR2(30)
+    )on commit delete rows;
+
+	comment on table loan_master
+	is 'used to retrieve details of the specific loan and Deliquency Information.';
+	comment on column loan_master.next_payment_date
+	is ' provides details for Next Payment Date for Specific Loan. ';
+	comment on column loan_master.interest_rate
+	is ' retrive and calculate the interest_rate of the loan.';
+

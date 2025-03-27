@@ -1,0 +1,27 @@
+CREATE GLOBAL TEMPORARY TABLE loan_payment_history 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- without the prior written consent of.	
+	-- Provides payment details of the specific loan
+	(    
+    payment_id NUMBER PRIMARY KEY,
+    loan_id VARCHAR2(12) NOT NULL,
+    remittance_id NUMBER NOT NULL,
+    payment_date DATE NOT NULL,
+    scheduled_principal NUMBER(15,2) NOT NULL,
+    scheduled_interest NUMBER(15,2) NOT NULL,
+    unscheduled_principal NUMBER(15,2) DEFAULT 0,
+    other_fees NUMBER(15,2) DEFAULT 0,
+    beginning_balance NUMBER(15,2) NOT NULL,
+    ending_balance NUMBER(15,2) NOT NULL,
+    created_by VARCHAR2(30) NOT NULL,
+    created_date DATE DEFAULT SYSDATE
+    )on commit delete rows;
+	
+	comment on table loan_payment_history
+	is ' provides payment details for the specific loan. ';
+		
+
