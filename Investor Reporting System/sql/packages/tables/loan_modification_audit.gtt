@@ -1,0 +1,23 @@
+CREATE GLOBAL TEMPORARY TABLE loan_modification_audit 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- without the prior written consent of.	
+	-- Provides loan transaction and loan audit details of the specific loan
+	(    
+    audit_id NUMBER PRIMARY KEY,
+    modification_id NUMBER,
+    loan_id VARCHAR2(20),
+    change_type VARCHAR2(20),
+    old_value VARCHAR2(4000),
+    new_value VARCHAR2(4000),
+    change_date DATE DEFAULT SYSDATE,
+    changed_by VARCHAR2(30)
+    )on commit delete rows;
+	
+	comment on table loan_modification_audit
+	is ' provides audit transaction details and provides old_value & new_value for the specific loan. ';
+		
+

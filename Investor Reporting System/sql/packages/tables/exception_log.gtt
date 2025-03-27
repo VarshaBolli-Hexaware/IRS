@@ -1,0 +1,26 @@
+CREATE GLOBAL TEMPORARY TABLE exception_log 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- without the prior written consent of.	
+	-- Log New Loan Exception Details
+	(
+    exception_id NUMBER PRIMARY KEY,
+    pool_id VARCHAR2(12),
+    loan_id VARCHAR2(12),
+    exception_type VARCHAR2(50) NOT NULL,
+    severity VARCHAR2(20) NOT NULL,
+    status VARCHAR2(20) DEFAULT 'OPEN',
+    exception_desc VARCHAR2(4000),
+    created_date DATE DEFAULT SYSDATE,
+    resolved_date DATE,
+    resolved_by VARCHAR2(30),
+    resolution_notes VARCHAR2(4000)
+    )on commit delete rows;
+	
+	comment on table exception_log
+	is ' provide details of the Exception for the specific loan. ';
+		
+

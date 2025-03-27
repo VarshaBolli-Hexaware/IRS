@@ -1,0 +1,27 @@
+CREATE GLOBAL TEMPORARY TABLE payment_transaction 
+	-- reserved. Unpublished ? Rights reserved under the
+	-- conventions. Use of a notice is precautionary only
+	-- and does not imply publication or disclosure. This software
+	-- contains confidential information and trade secrets of
+	-- Hexaware. Use, disclosure, or reproduction is prohibited
+	-- without the prior written consent of.	
+	-- Provides transaction details of the specific loan
+	(    
+    transaction_id    NUMBER(15) PRIMARY KEY,
+    loan_id           VARCHAR2(20),
+    transaction_date  DATE,
+    due_date         DATE,
+    payment_amount    NUMBER(12,2),
+    principal_amount  NUMBER(12,2),
+    interest_amount   NUMBER(12,2),
+    other_amount     NUMBER(12,2),
+    transaction_type VARCHAR2(20),
+    status          VARCHAR2(15),
+    created_date    DATE DEFAULT SYSDATE,
+    modified_date   DATE DEFAULT SYSDATE
+    )on commit delete rows;
+	
+	comment on table payment_transaction
+	is ' provides transaction details and provides principal & interest amount for the specific loan. ';
+		
+
